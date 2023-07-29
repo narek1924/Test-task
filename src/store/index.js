@@ -22,23 +22,11 @@ const filesSlice = createSlice({
         (file) => file.id === action.payload.id
       );
       state.files[index].loading = false;
-      switch (action.payload.error) {
-        case "ERR_NETWORK": {
-          state.files[index].errorMessage = "Network Error";
-          return;
-        }
-        case 409: {
-          state.files[index].errorMessage =
-            "File with such a name already exists";
-          return;
-        }
-        case "File type is not supported": {
-          state.files[index].errorMessage = "File type is not supported";
-          return;
-        }
-        default: {
-          state.files[index].errorMessage = "Upload failed";
-        }
+      if (action.payload.error === 409) {
+        state.files[index].errorMessage =
+          "File with such a name already exists";
+      } else {
+        state.files[index].errorMessage = "Upload failed";
       }
     },
   },

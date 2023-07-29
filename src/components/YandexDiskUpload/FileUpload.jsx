@@ -54,15 +54,6 @@ const FileUpload = ({ token }) => {
             errorMessage: "",
           })
         );
-        if (!file.type) {
-          dispatch(
-            fileActions.onError({
-              id: id,
-              error: "File type is not supported",
-            })
-          );
-          return;
-        }
         formData.append("file", file);
         axios
           .get("https://cloud-api.yandex.net/v1/disk/resources/upload", {
@@ -88,14 +79,14 @@ const FileUpload = ({ token }) => {
                     error:
                       error.response !== undefined
                         ? error.response.status
-                        : error,
+                        : "error",
                   })
                 );
               });
           })
           .catch((error) => {
             console.log(
-              error.response !== undefined ? error.response.status : error.code
+              error.response !== undefined ? error.response.status : "error"
             );
             dispatch(
               fileActions.onError({
