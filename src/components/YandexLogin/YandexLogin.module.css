@@ -1,0 +1,24 @@
+.container {
+  width: 300px;
+  height: 300px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: rgba(100, 100, 111, 0.2) 0px 7px 29px 0px;
+}
+.login {
+  display: flex;
+  align-items: center;
+  width: 220px;
+  height: 40px;
+  padding: 0 20px;
+  background-color: black;
+  border-radius: 10px;
+  color: white;
+  cursor: pointer;
+  &:active {
+    transform: scale(0.99);
+  }
+}
