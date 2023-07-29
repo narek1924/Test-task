@@ -32,15 +32,16 @@
   gap: 7px;
 }
 .fileItem__info__text {
-  max-width: 110px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .name {
+  max-width: 160px;
   font-size: 15px;
 }
 .size {
+  max-width: 60px;
   font-size: 12px;
 }
 .error {
@@ -49,6 +50,9 @@
 .delete {
   width: 20px;
   cursor: pointer;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
   &:hover {
     filter: invert(66%) sepia(8%) saturate(3838%) hue-rotate(69deg)
       brightness(100%) contrast(89%);

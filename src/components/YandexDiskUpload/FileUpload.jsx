@@ -1,13 +1,18 @@
-/* eslint-disable no-unused-vars */
+import React from "react";
 import { useState } from "react";
+import PropTypes from "prop-types";
+import { useDispatch } from "react-redux";
+
+import { fileActions } from "../../store/index";
 import axios from "axios";
 import styles from "./YandexDiskUpload.module.css";
-import PropTypes from "prop-types";
 
-const FileUpload = ({ token, onFileUpload, onError, onLoadingFinished }) => {
+const FileUpload = ({ token }) => {
   const [drag, setDrag] = useState(false);
   // eslint-disable-next-line no-unused-vars
   const [file, setFile] = useState("");
+  const dispatch = useDispatch();
+
   const dragStartHandler = (event) => {
     event.preventDefault();
     setDrag(true);
@@ -19,6 +24,7 @@ const FileUpload = ({ token, onFileUpload, onError, onLoadingFinished }) => {
   const dropHandler = (event) => {
     event.preventDefault();
     setDrag(false);
+    console.log(event.dataTransfer.files);
     uploadHandler(event.dataTransfer.files);
   };
   const uploadHandler = (files) => {
@@ -39,13 +45,24 @@ const FileUpload = ({ token, onFileUpload, onError, onLoadingFinished }) => {
           }
         };
         const id = Math.random().toString();
-        onFileUpload({
-          id: id,
-          name: file.name,
-          size: fileSize(),
-          loading: true,
-          hasError: false,
-        });
+        dispatch(
+          fileActions.addFile({
+            id: id,
+            name: file.name,
+            size: fileSize(),
+            loading: true,
+            errorMessage: "",
+          })
+        );
+        if (!file.type) {
+          dispatch(
+            fileActions.onError({
+              id: id,
+              error: "File type is not supported",
+            })
+          );
+          return;
+        }
         formData.append("file", file);
         axios
           .get("https://cloud-api.yandex.net/v1/disk/resources/upload", {
@@ -60,16 +77,35 @@ const FileUpload = ({ token, onFileUpload, onError, onLoadingFinished }) => {
           .then((result) => {
             axios
               .put(result.data.href, formData)
-              .then((data) => {
-                console.log(data);
-                onLoadingFinished(id);
+              .then(() => {
+                dispatch(fileActions.onUploadFinished(id));
               })
+
               .catch((error) => {
-                onError(id);
+                dispatch(
+                  fileActions.onError({
+                    id: id,
+                    error:
+                      error.response !== undefined
+                        ? error.response.status
+                        : error,
+                  })
+                );
               });
           })
-          .catch(() => {
-            onError(id);
+          .catch((error) => {
+            console.log(
+              error.response !== undefined ? error.response.status : error.code
+            );
+            dispatch(
+              fileActions.onError({
+                id: id,
+                error:
+                  error.response !== undefined
+                    ? error.response.status
+                    : error.code,
+              })
+            );
           });
       }
     }
@@ -98,7 +134,7 @@ const FileUpload = ({ token, onFileUpload, onError, onLoadingFinished }) => {
           {" "}
           <input
             type="file"
-            onChange={(e) => {
+            onChange={(event) => {
               uploadHandler(event.target.files);
             }}
             value={file}

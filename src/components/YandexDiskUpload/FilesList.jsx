@@ -1,29 +1,56 @@
+import React from "react";
 import { useEffect, useRef } from "react";
 import autoAnimate from "@formkit/auto-animate";
+import { useSelector, useDispatch } from "react-redux";
 import PropTypes from "prop-types";
+import axios from "axios";
+
+import { fileActions } from "../../store/index";
 import styles from "./FilesList.module.css";
 import LoadingSpinner from "../../UI/LoadingSpinner";
 import deleteIcon from "../..//assets/delete.png";
 
-const FilesList = ({ lists, onDelete }) => {
+const FilesList = ({ token }) => {
   const parent = useRef(null);
-
+  const filesState = useSelector((state) => state.files);
+  const dispatch = useDispatch();
   useEffect(() => {
     parent.current && autoAnimate(parent.current);
   }, [parent]);
-
+  const onDelete = (name, id) => {
+    dispatch(fileActions.deleteFile(id));
+    const file = filesState.find((file) => file.id === id);
+    if (!file.errorMessage) {
+      deleteRequest(name);
+    }
+  };
+  function deleteRequest(name) {
+    axios
+      .delete("https://cloud-api.yandex.net/v1/disk/resources", {
+        params: {
+          path: name,
+        },
+        headers: {
+          Authorization: "OAuth " + token,
+        },
+      })
+      .then(() => {})
+      .catch((error) => {
+        console.error(error);
+      });
+  }
   return (
     <ul className={styles.list} ref={parent}>
-      {lists.length === 0 && (
+      {filesState.length === 0 ? (
         <div className={styles.empty}>No files uploaded yet</div>
-      )}
-      {lists.length !== 0 &&
-        lists.map((file) => (
+      ) : (
+        filesState.length !== 0 &&
+        filesState.map((file) => (
           <li className={styles.fileItem} key={file.id}>
-            {file.hasError && (
-              <div className={styles.error}>Uploading failed</div>
+            {file.errorMessage && (
+              <div className={styles.error}>{file.errorMessage}</div>
             )}
-            {!file.hasError && (
+            {!file.errorMessage && (
               <div className={styles.fileItem__info}>
                 <div
                   className={`${styles.fileItem__info__text} ${styles.name}`}
@@ -37,7 +64,7 @@ const FilesList = ({ lists, onDelete }) => {
                 </div>
               </div>
             )}
-            {file.loading && !file.hasError && <LoadingSpinner />}
+            {file.loading && !file.errorMessage && <LoadingSpinner />}
             {!file.loading && (
               <img
                 src={deleteIcon}
@@ -49,13 +76,13 @@ const FilesList = ({ lists, onDelete }) => {
               />
             )}
           </li>
-        ))}
+        ))
+      )}
     </ul>
   );
 };
 FilesList.propTypes = {
-  lists: PropTypes.array,
-  onDelete: PropTypes.func,
+  token: PropTypes.string,
 };
 
 export default FilesList;
